@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import matplotlib.image as mpimg
 import pandas as pd
-import cv2
+import cv2, random
 
 
 class FacialKeypointsDataset(Dataset):
@@ -159,3 +159,56 @@ class ToTensor(object):
         
         return {'image': torch.from_numpy(image),
                 'keypoints': torch.from_numpy(key_pts)}
+                
+
+class Rotate90(object):
+    """Rotate the image and keypoints by 90 degrees counterclockwise.
+    
+    xNew = (x-x0)*cos(theta) - (h-y-y0)*sin(theta) + x0
+    yNew = -(x-x0)*sin(theta) - (h-y-y0)*cos(theta) + (h-y0)
+    
+    """
+
+    def __call__(self, sample):
+        image, key_pts = sample['image'], sample['keypoints']
+
+        # Original dimensions
+        h, w = image.shape[:2]
+        
+        i = random.randrange(2)
+        
+        if i == 0:
+            return {'image': image, 'keypoints': key_pts}
+
+        if i == 2:
+            # Rotate image using OpenCV (90 degrees CW)
+            img_rotated = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+
+            # Transform keypoints accordingly
+            key_pts_rotated = np.zeros_like(key_pts)
+            key_pts_rotated[:, 0] = key_pts_rotated[:, 0] - h + 1 - key_pts[:, 1]  # new x = width - 1 - old y
+            key_pts_rotated[:, 1] = key_pts[:, 0]          # new y = old x
+
+            return {'image': img_rotated, 'keypoints': key_pts_rotated}
+        
+        if i == 3:      
+            # Rotate image using OpenCV (90 degrees CCW)
+            img_rotated = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+            # Transform keypoints accordingly
+            key_pts_rotated = np.zeros_like(key_pts)
+            key_pts_rotated[:, 0] = key_pts[:, 1]          # new x = old y
+            key_pts_rotated[:, 1] = w - 1 - key_pts[:, 0]  # new y = height - 1 - old x
+
+            return {'image': img_rotated, 'keypoints': key_pts_rotated}
+        
+        if i == 1:      
+            # Rotate image using OpenCV (180 degrees CCW)
+            img_rotated = cv2.rotate(image, cv2.ROTATE_180)
+
+            # Transform keypoints accordingly
+            key_pts_rotated = np.zeros_like(key_pts)
+            key_pts_rotated[:, 0] = w - 1 - key_pts[:, 0]   # new x = width - 1 - old x
+            key_pts_rotated[:, 1] = h - 1 - key_pts[:, 1]   # new y = height - 1 - old y
+            
+            return {'image': img_rotated, 'keypoints': key_pts_rotated}

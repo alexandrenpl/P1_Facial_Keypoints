@@ -126,6 +126,7 @@ class RandomCrop(object):
 
     def __call__(self, sample):
         image, key_pts = sample['image'], sample['keypoints']
+        
 
         h, w = image.shape[:2]
         new_h, new_w = self.output_size
@@ -137,7 +138,7 @@ class RandomCrop(object):
                       left: left + new_w]
 
         key_pts = key_pts - [left, top]
-
+        
         return {'image': image, 'keypoints': key_pts}
 
 

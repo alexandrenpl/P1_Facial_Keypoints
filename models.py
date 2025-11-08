@@ -44,3 +44,15 @@ class Net(nn.Module):
         x = F.relu(self.ln1(self.fc1(x))); x = self.dropout_fc(x)
         x = F.relu(self.ln2(self.fc2(x))); x = self.dropout_fc(x)
         return self.fc3(x)
+    
+    
+def initialize_weights(m):
+    if isinstance(m, nn.Conv2d):
+        nn.init.kaiming_uniform_(m.weight, mode='fan_in', nonlinearity='relu')
+        if m.bias is not None:
+            nn.init.zeros_(m.bias)
+
+    elif isinstance(m, nn.Linear):
+        nn.init.kaiming_uniform_(m.weight, mode='fan_in', nonlinearity='relu')
+        if m.bias is not None:
+            nn.init.zeros_(m.bias)

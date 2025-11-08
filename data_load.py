@@ -176,19 +176,24 @@ class Rotate90(object):
         # Original dimensions
         h, w = image.shape[:2]
         
-        i = random.randrange(2)
+        i = random.randrange(4)
         
         if i == 0:
             return {'image': image, 'keypoints': key_pts}
 
         if i == 2:
-            # Rotate image using OpenCV (90 degrees CW)
+            # Rotate image 90° clockwise
             img_rotated = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
 
-            # Transform keypoints accordingly
-            key_pts_rotated = np.zeros_like(key_pts)
-            key_pts_rotated[:, 0] = key_pts_rotated[:, 0] - h + 1 - key_pts[:, 1]  # new x = width - 1 - old y
-            key_pts_rotated[:, 1] = key_pts[:, 0]          # new y = old x
+            # Rotate keypoints accordingly (x, y) -> (x', y')
+            h, w = image.shape[:2]
+            kp = key_pts.astype(np.float32).copy()
+            x, y = kp[:, 0], kp[:, 1]
+
+            x_new = h - 1 - y
+            y_new = x
+
+            key_pts_rotated = np.stack([x_new, y_new], axis=1)
 
             return {'image': img_rotated, 'keypoints': key_pts_rotated}
         
